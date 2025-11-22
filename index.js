@@ -6,6 +6,15 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const stripe = require('stripe')(process.env.STRIPE_SECRET);
 
 const port = process.env.PORT || 3000;
+const crypto = require('crypto');
+
+function generateTrackingId() {
+  const prefix = 'PRCL'; // your brand prefix
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, ''); // YYYYMMDD
+  const random = crypto.randomBytes(3).toString('hex').toUpperCase(); // 6-char random hex
+
+  return `${prefix}-${date}-${random}`;
+}
 
 // middleware
 app.use(express.json());
@@ -26,6 +35,7 @@ async function run() {
 
     const db = client.db('zap_shift_db');
     const parcelsCollection = db.collection('parcels');
+    const paymentCollection = db.collection('payments');
 
     // parcel api
     app.get('/parcels', async (req, res) => {
