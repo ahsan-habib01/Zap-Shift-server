@@ -64,6 +64,20 @@ async function run() {
     const paymentCollection = db.collection('payments');
     const ridersCollection = db.collection('riders');
 
+    // middle admin before allowing admin activity
+    // must be used after verifyFBToken middleware
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded_email;
+      const query = { email };
+      const user = await userCollection.findOne(query);
+
+      if (!user || user.role !== 'admin') {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+
+      next();
+    };
+
     //? user related api
     app.get('/users', verifyFBToken, async (req, res) => {
       const searchText = req.query.searchText;
@@ -109,6 +123,24 @@ async function run() {
       const result = await userCollection.insertOne(user);
       res.send(result);
     });
+
+    app.patch(
+      '/users/:id/role',
+      verifyFBToken,
+      verifyAdmin,
+      async (req, res) => {
+        const id = req.params.id;
+        const roleInfo = req.body;
+        const query = { _id: new ObjectId(id) };
+        const updatedDoc = {
+          $set: {
+            role: roleInfo.role,
+          },
+        };
+        const result = await userCollection.updateOne(query, updatedDoc);
+        res.send(result);
+      }
+    );
 
     //? parcel related api
     app.get('/parcels', async (req, res) => {
