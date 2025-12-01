@@ -342,7 +342,7 @@ async function run() {
       res.send(result);
     });
 
-    app.patch('/riders/:id', verifyFBToken, async (req, res) => {
+    app.patch('/riders/:id', verifyFBToken, verifyAdmin, async (req, res) => {
       const status = req.body.status;
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
